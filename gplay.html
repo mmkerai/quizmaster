@@ -3,80 +3,67 @@
 <head>
 	<title>Quizmaster Games</title>
 	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-<!--	<script src="https://apis.google.com/js/client:platform.js?onload=initGSignin" async defer></script> -->
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+<!--	<script src="https://apis.google.com/js/client:platform.js?onload=initGSignin" async defer></script> -->
 	<script type="text/javascript" src="tabulator.min.js"></script>
-	<link rel="stylesheet" href="https://unpkg.com/tabulator-tables@4.0.5/dist/css/tabulator.min.css"/>
+	<link rel="stylesheet" href="tabulator.min.css"/>
 	<script src="socket.io/socket.io.js"></script>
 	<script src="qmutils.js"></script>
 	<script src="gplay.js"></script>
+	<link rel="stylesheet" href="quizmaster.css"/>
 </head>
 <body>
-	<div class="container theme-showcase" role="main">
-		<div class="well">
-			<h3>Quizmaster Game Play</h3>
-			<h5><span id="version" class="pull-left"></span></h5>
-			<span class="pull-right">
-				<button class="btn btn-info" id="userbutton"></button>
-				<button class="btn btn-warning" id="signoutbutton" onclick="signOut()">Sign Out</button>
-			</span>
-			<p>&nbsp;</p>
+<div class="container theme-showcase" role="main">
+	<div class="well">
+		<h3>Quizmaster Game Play</h3>
+		<h5><span id="version" class="pull-left"></span></h5>
+		<span class="pull-right">
+			<button class="btn btn-info" id="userbutton"></button>
+			<button class="btn btn-warning" id="signoutbutton" onclick="signOut()">Sign Out</button>
+		</span>
+		<p>&nbsp;</p>
+	</div>
+	<div class="col-xs-12">
+		<div class="col-xs-2">
+			<button class="btn btn-info" id="signinbutton" onclick="signIn()">Sign In</button>
 		</div>
-		<div class="col-xs-12">
-			<div class="col-xs-2">
-				<button class="btn btn-info" id="signinbutton" onclick="signIn()">Sign In</button>
-			</div>
-		</div>
+	</div>
 	<p>&nbsp;</p>
+	<div id="gameplay">
 		<button class="btn btn-info" id="startgame" onclick="startGame()">Start Game Play</button>
 		<button class="btn btn-info" id="nextq" onclick="nextQuestion()">Next Question</button>
-	Users ready to play: <button type="button" class="btn btn-warning" id="users" data-toggle="modal" data-target="#mymodal"></button>
-	Answers submitted: <button type="button" class="btn btn-warning" id="answers"></button>
-	<button type="button" class="btn btn-warning" onclick="showScores()">Show Scores</button>
-	<div id="mymodal" class="modal fade" role="dialog">
-		<div class="modal-dialog modal-sm">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title">Contestants Ready to Play</h4>
-        </div>
-        <div class="modal-body">
-          <p id="userlist"></p>
-        </div>
-	      <div class="modal-footer">
-	        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	      </div>
+		Users ready to play: <button type="button" class="btn btn-warning" id="users" data-toggle="modal" data-target="#mymodal"></button>
+		Answers submitted: <button type="button" class="btn btn-warning" id="answers"></button>
+		<button type="button" class="btn btn-warning" onclick="showScores()">Show Scores</button>
+		<div id="mymodal" class="modal fade" role="dialog">
+			<div class="modal-dialog modal-sm">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Contestants Ready to Play</h4>
+					</div>
+					<div class="modal-body">
+						<p id="userlist"></p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
 			</div>
-    </div>
-	</div>
-	<p><strong id='gameheader'></strong></p>
-			<p><strong id="qheader"></strong></p>
-			<!--		<form id="qaform">
-			<div class="form-group">
-				<label class="control-label" id="question"></label><strong class="pull-right" id="tremain">time</strong>
-				<div class="input-group">
-	      	<input type="text" class="form-control" id="qanswer" placeholder="Your Answer"/>
-					<div class="input-group-btn">
-		         <button class="btn btn-default" onclick="alert('hello')" type="submit"><i class="glyphicon glyphicon-ok"></i></button>
-		      </div>
-		   	</div>
-			</div>
-		</form>
-		<div id="mchoice" class="btn-group">
-			<button type="button" class="btn btn-primary" onclick="answer(1)"></button>
-			<button type="button" class="btn btn-success" onclick="answer(2)"></button>
-			<button type="button" class="btn btn-warning" onclick="answer(3)"></button>
-			<button type="button" class="btn btn-danger" onclick="answer(4)"></button>
-		</div> -->
-	<p><img id='qimage'></p>
-	<div id='scores'></div>
-	<p>&nbsp;</p>
+		</div>
+		<p><strong id='gameheader'></strong></p>
+		<p><strong id="qheader"></strong></p>
+		<p><img id='qimage'></p>
+		<div id='scores'></div>
+		<p>&nbsp;</p>
 		<div id="qlist"></div>
-	<p>&nbsp;</p>
-	<p class="text-center" id="error"></p>
-	<p class="text-center" id="message1"></p>
-	<p class="text-center" id="message2"></p>
+		<p>&nbsp;</p>
+		<p class="message" id="error"></p>
+		<p class="message" id="message1"></p>
+		<p class="message" id="message2"></p>
+		<button class="btn btn-info" id="nextq" onclick="location.href = 'admin.html';">Back to Admin</button>
+	</div>
 </div>
 </body>
 </html>

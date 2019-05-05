@@ -44,11 +44,10 @@ function signOut() {
 	localStorage.removeItem('QM');
 //  var auth2 = gapi.auth2.getAuthInstance();
 //  auth2.signOut().then(function () {
-			socket.emit('logoutRequest',"");
-			$('#userbutton').hide();
-			$('#signoutbutton').hide();
-			$('#signinbutton').show();
-      console.log('User signed out.');
+		socket.emit('logoutRequest',"");
+		setDefaultValues();
+		location.href = 'admin.html';
+      	console.log('User signed out.');
 //    });
 }
 
@@ -56,11 +55,13 @@ function setDefaultValues() {
 	$('#version').text(version);
 	$('#userbutton').hide();
 	$('#signoutbutton').hide();
+	$('#gameplay').hide();
 	$('#regqm').hide();
 	$('#signinbutton').show();
 	$("#error").text("");
 	$("#message1").text("");
 	$('#joingame').hide();
+	$('#joingamex').hide();
 	$('#qaform').hide();
 	$('#nextq').hide();
 	$('#qanswer').val('');
@@ -74,6 +75,7 @@ function setPostLoginValues(qm) {
 	$('#userbutton').text(qm.qmname);
 	$('#registerbutton').hide();
 	$('#signinbutton').hide();
+	$('#gameplay').show();
 	$('#signoutbutton').show();
 	$('#signinbutton').hide();
 	$('#userbutton').show();
@@ -201,4 +203,50 @@ function getquestions() {
 	const subcat = $('select[name="qsubcat"] option:selected').val();
 	console.log("Getting Questions with Category: "+cat+":"+subcat);
 	socket.emit('getQuestionsByCatandSubcat',cat,subcat);
+}
+
+function readCookie(name)
+{
+  name += '=';
+  var parts = document.cookie.split(/;\s*/);
+  for (var i = 0; i < parts.length; i++)
+  {
+    var part = parts[i];
+    if (part.indexOf(name) == 0)
+      return part.substring(name.length);
+  }
+  return null;
+}
+
+/*
+ * Saves a cookie for delay time. If delay is blank then no expiry.
+ * If delay is less than 100 then assumes it is days
+ * otherwise assume it is in seconds
+ */
+function saveCookie(name, value, delay)
+{
+  var date, expires;
+  if(delay)
+  {
+	  if(delay < 100)	// in days
+		  delay = delay*24*60*60*1000;	// convert days to milliseconds
+	  else
+		  delay = delay*1000;	// seconds to milliseconds
+	  
+	  date = new Date();
+	  date.setTime(date.getTime()+delay);	// delay must be in seconds
+	  expires = "; expires=" + date.toGMTString();		// convert unix date to string
+  }
+  else
+	  expires = "";
+  
+  document.cookie = name+"="+value+expires+"; path=/";
+}
+
+/*
+ * Delete cookie by setting expiry to 1st Jan 1970
+ */
+function delCookie(name) 
+{
+	document.cookie = name + "=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/";
 }

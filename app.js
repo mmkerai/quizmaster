@@ -57,6 +57,7 @@ process.on('uncaughtException', function (err) {
 */
 console.log("Server started on port "+PORT);
 //qmt.testDL();
+//qmt.testAns();
 
 // Set up socket actions and responses
 io.on('connection',function(socket) {
@@ -222,7 +223,15 @@ io.on('connection',function(socket) {
   socket.on('getGamesRequest',function(qmid) {
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     console.log("Getting Games for: "+qmid);
-    dbt.getGames(qmid,socket);
+    dbt.getGames(qmid,function(games) {
+      if(games.length > 0) {
+        socket.emit('getGamesResponse',games);
+      }
+      else {
+        console.log("No games for QM: "+qmid);
+        socket.emit('errorResponse',qmid);
+      }
+    });
   });
 
 // this event is used to prepare for game start.
@@ -230,9 +239,14 @@ io.on('connection',function(socket) {
   socket.on('preGameStartRequest',function(qmid,gameid) {
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     dbt.getGameByID(qmid,gameid,function(game) {
-      console.log("Got Game id: "+game.gameid);
+//      console.log("Got Game id: "+game.gameid);
       let newg = qmt.gameReady(game);
-      socket.emit('preGameStartResponse',newg);
+// Chuck everybody out of the room in case they were already there from previous game play      
+      io.of('/').in(gameid).clients((error, socketIds) => {
+        if (error) throw error;
+        socketIds.forEach(socketId => io.sockets.sockets[socketId].leave(gameid));
+      });
+      setTimeout(function(){socket.emit('preGameStartResponse',newg)},2000);
     });
   });
 
@@ -285,7 +299,7 @@ io.on('connection',function(socket) {
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     let scores = qmt.getContestantScores(gameid);   // current scores
     if(scores) {
-      io.in(game.gameid).emit('scoresUpdate',scores);
+      io.in(gameid).emit('scoresUpdate',scores);
     }
     else {
       socket.emit("errorResponse","Game not active");
@@ -293,20 +307,28 @@ io.on('connection',function(socket) {
   });
 
 // used by contestant to join game so no login/auth required
+// if previously joined then there will be a token saved in a cookie
   socket.on('joinGameRequest',function(contestant) {
-    if(!contestant.userid.trim() || !contestant.accesscode.trim()) {
-      socket.emit("errorResponse","Please enter Nickname and Accesscode");
-//      console.log("No contestant info");
-      return;
+    if(!contestant.token) {
+      if(!contestant.userid || !contestant.accesscode) {
+        socket.emit("errorResponse","Please enter Nickname and Accesscode");
+      }
+      contestant.token = contestant.userid +":"+contestant.accesscode;  
+    }
+    else {
+      let carr = contestant.token.split(":");
+      contestant.userid = carr[0];
+      contestant.accesscode = carr[1];
     }
 
-    const game = qmt.joinGame(contestant,socket.id);
+    const game = qmt.joinGame(contestant);
     if(game) {
-      console.log(contestant.userid+" Joining game "+game.gamename);
+      console.log(contestant.userid+" Joining game "+game.gamename+":"+contestant.token);
       socket.join(game.gameid);
-      socket.emit("joinGameResponse",contestant.userid+", you have joined game: "+game.gamename);
+//      socket.emit("joinGameResponse",contestant.userid+", you have joined game "+game.gamename);
+      socket.emit("joinGameResponse",contestant);
 //      sending to all clients in the game room, including sender
-      io.in(game.gameid).emit('announcement','Your game will start shortly');
+      io.in(game.gameid).emit('announcement','Please wait for the Quizmaster to start your game');
       io.to(QMSockets[game.qmid]).emit("contestantUpdate",game.contestants);  // tell the quizmaster
     }
     else {
@@ -315,10 +337,12 @@ io.on('connection',function(socket) {
   });
 
 // used by contestant to submit their answer so no login/auth required
-  socket.on('submitAnswerRequest',function(answer) {
-    let game = qmt.registerAnswer(answer,socket.id);
+  socket.on('submitAnswerRequest',function(ans) {
+    console.log("Reg answer: "+ans.val+":"+ans.token);
+//    qmt.registerAnswer(ans.val,ans.token);
+    let game = qmt.registerAnswer(ans.val,ans.token);
     if(game) {
-      socket.emit("submitAnswerResponse","Answer successfully registered: "+answer);
+      socket.emit("submitAnswerResponse","Answer registered: "+ans.val);
       io.to(QMSockets[game.qmid]).emit("answersUpdate",game.answers);  // tell the quizmaster
     }
     else {
@@ -340,7 +364,7 @@ io.on('connection',function(socket) {
 /* Functions below this point
 ********************************************/
 function removeSocket(id,evname) {
-		console.log("Socket "+id+evname+" at "+ new Date().toISOString());
+		console.log("Socket "+id+" "+evname+" at "+ new Date().toISOString());
     delete AUTHUSERS[id];
 }
 
@@ -417,8 +441,6 @@ function collectCats(str) {
 function preQuestion(game) {
   io.in(game.gameid).emit('announcement','Get ready!');
   io.in(game.gameid).emit('currentQuestionUpdate','');
-  io.in(game.gameid).emit('image','');
-  io.in(game.gameid).emit('multichoice','');
   game.answers = 0;   // reset the no of answers received
   io.to(QMSockets[game.qmid]).emit("answersUpdate",game.answers);  // tell the QM
   var clock = setTimeout(gcountdown,1000,game,GCOUNTDOWNTIME);
@@ -426,10 +448,11 @@ function preQuestion(game) {
 
 // count down before start of each question. Once coundown hits 0, show the question
 function gcountdown(game,time) {
-  io.in(game.gameid).emit('timeUpdate','Next question in: '+time);
+  io.in(game.gameid).emit('timeUpdate',time);
   if(time > 0)
     setTimeout(gcountdown,1000,game,time-1);  // continue countdown
   else {
+    io.in(game.gameid).emit('timeUpdate',0);
     postQuestion(game); // show the question
     }
 }
@@ -457,10 +480,12 @@ function postQuestion(game) {
 
 // count down after start of each question duration is as per game settings
 function qcountdown(game,time) {
-  io.in(game.gameid).emit('timeUpdate','Time Remaining: '+time);
+//  io.in(game.gameid).emit('timeUpdate','Time Remaining: '+time);
+  io.in(game.gameid).emit('timeUpdate',time);
   if(time > 0)
     setTimeout(qcountdown,1000,game,time-1);  // continue countdown
   else {
+    io.in(game.gameid).emit('timeUpdate',0);
     endQuestion(game);
     }
 }
@@ -469,10 +494,10 @@ function qcountdown(game,time) {
 function endQuestion(game) {
   io.in(game.gameid).emit('timeUpdate','');
   io.in(game.gameid).emit('currentQuestionUpdate','');
-  io.in(game.gameid).emit('image','');
-  io.in(game.gameid).emit('multichoice','');
+  io.in(game.gameid).emit('correctAnswer',game.questions[game.cqno].answer);
   let points = qmt.getContestantPoints(game);
-  io.in(game.gameid).emit('scoresUpdate',points);
+//  Show all scores for this question
+//  io.in(game.gameid).emit('scoresUpdate',points);
   if((game.cqno+1) >= game.numquestions) {    // been through all questions
     io.in(game.gameid).emit('announcement','End of Game');
     game.cqno = -1;   // game has ended setting

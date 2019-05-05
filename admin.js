@@ -40,10 +40,6 @@ function chooseq() {
 	socket.emit('getCatsRequest','test');
 }
 
-function dojoin() {
-	$('#joingame').show();
-}
-
 function reviewq() {
 	console.log("Reviewing Questions");
 	socket.emit('getCatsRequest','test');
@@ -80,13 +76,6 @@ function addgame() {
 	socket.emit('newGameRequest',newg);
 }
 
-function joingame() {
-	let contestant = new Object();
-	contestant.userid = $('#cname').val();
-	contestant.accesscode = $('#cacode').val();
-	socket.emit('joinGameRequest',contestant);
-}
-
 socket.on('loginResponse',function(qm) {
 	QM = qm;
 //	console.log("Login response: "+QM);
@@ -106,10 +95,13 @@ socket.on('getGamesResponse',function(glist) {
 	$('#gamestable').show();
 	var table = new Tabulator("#gamestable", {
 	    data: glist,
+   		responsiveLayout:true,
 	    columns:[
-			{title:"Game Name", field:"gamename"},
+			{title:"Game Name", field:"gamename",width:300},
 	    {title:"Game Type", field:"gametype"},
-	    {title:"No of Questions", field:"numquestions"}],
+			{title:"Access Code", field:"accesscode"},
+	    {title:"No of Questions", field:"numquestions"},
+			{title:"Time Limit", field:"timelimit"}],
 			rowDblClick:function(e, row) {
 				console.log(row._row.data.gameid);
 				window.open("gplay.html?gameid="+row._row.data.gameid, '_blank');

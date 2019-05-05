@@ -91,8 +91,7 @@ socket.on('contestantUpdate',function(con) {
 	updateContestants(con);
 });
 
-// This is called when a new contestant joins the game
-// con is an array of contestant names
+// This is called when a contestant submits an answer
 socket.on('answersUpdate',function(ans) {
 	$('#answers').text(ans);
 });
@@ -109,10 +108,12 @@ socket.on('image',function(im) {
 
 socket.on('scoresUpdate',function(scores) {
 	$('#scores').show();
-		var table = new Tabulator("#scores", {
-		    data: scores,
-		    columns:[
-		    {title:"Name", field:"cname"},
-		 		{title:"Points", field:"points"}]
-		});
+	var table = new Tabulator("#scores", {
+		layout:"fitColumns",
+		data: scores,
+		columns:[
+		{title:"Name", field:"cname"},
+		{title:"Points", field:"points"},
+		{title:"Points", field:"points",formatter:"progress",formatterParams:{color:["#00dd00", "orange", "rgb(255,0,0)"]},width:500}]
+	});
 });

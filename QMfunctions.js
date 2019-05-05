@@ -98,11 +98,30 @@ console.log("QM Class initialised");
 
 QMQ.prototype.testDL = function() {
   let w1 = "manji kerai";
-  console.log("Test1: "+dlevenshtein(w1,"Manji Kerai"));
-  console.log("Test2: "+dlevenshtein(w1,"manjikerai"));
-  console.log("Test3: "+dlevenshtein(w1,"manji keria"));
-  console.log("Test4: "+dlevenshtein(w1,"kslskss kerai"));
-  console.log("Test5: "+dlevenshtein(w1,"kerai manji"));
+  console.log("TestDL1: "+dlevenshtein(w1,"Manji Kerai"));
+  console.log("TestDL2: "+dlevenshtein(w1,"manjikerai"));
+  console.log("TestDL3: "+dlevenshtein(w1,"manji keria"));
+  console.log("TestDL4: "+dlevenshtein(w1,"kslskss kerai"));
+  console.log("TestDL5: "+dlevenshtein(w1,"kerai manji"));
+}
+
+QMQ.prototype.testAns = function() {
+  let q1 = {"type":'number',"answer":"234"};
+  let q2 = {"type":'text',"answer":"manji kerai"};
+  let q3 = {"type":'text',"answer":"man"};
+  let g1 = {"cqno":0,"questions": [q1,q2,q3],"timelimit": 10,"qstarttime":new Date()};
+
+  console.log("Test1: "+checkAnswer(g1,"manji"));
+  console.log("Test2: "+checkAnswer(g1,"2345"));
+  console.log("Test3: "+checkAnswer(g1,"234"));
+  g1.cqno=1;
+  console.log("Test4: "+checkAnswer(g1,"234"));
+  console.log("Test5: "+checkAnswer(g1,"manji keqmqmt"));
+  console.log("Test6: "+checkAnswer(g1,"Manji Kera"));
+  g1.cqno=2;
+  console.log("Test7: "+checkAnswer(g1,"234567"));
+  console.log("Test8: "+checkAnswer(g1,"manji"));
+  console.log("Test9: "+checkAnswer(g1,"man"));
 }
 
 QMQ.prototype.gameReady = function(game) {
@@ -112,7 +131,7 @@ QMQ.prototype.gameReady = function(game) {
   let qarray = [];
   for(var i in array) {
     let q = Dbt.getQuestionByID(array[i],function(q) {
-      console.log("Push q");
+//      console.log("Push q");
       qarray.push(q);
       ActiveGames[game.gameid].questions = qarray;
     });
@@ -262,17 +281,23 @@ QMQ.prototype.getGameQuestions = function(game) {
 }
 
 // Contestant joins an active game
-QMQ.prototype.joinGame = function(contestant,sid) {
+// If token already exists then use same contestant else create a new contestant
+QMQ.prototype.joinGame = function(contestant) {
   const gameid = AccessCodes[contestant.accesscode];    // get game id if access code matches
+  const token = contestant.token;
 //  console.log("c access code:"+contestant.accesscode);
 //  console.log("game:"+gameid);
   let game = ActiveGames[gameid];
   if(game) {
     if(game.cqno == -1)    // game has finished, so cant join
       return;
+// check that this is a existing contestant re-logging in and not new contestant with an old token
+    if(Contestants[token] && ActiveGames[gameid].contestants[token])
+      return(game);   // existing contestant
+    // new contestant
     let con = new QMContestant(contestant.userid);
-    ActiveGames[gameid].contestants[sid] = con; // add this contestant
-    Contestants[sid] = game.gameid;    // save the game for this contestant
+    ActiveGames[gameid].contestants[token] = con; // add this contestant
+    Contestants[token] = game.gameid;    // save the game for this contestant
     return(game);  // return the game object
     }
   else
@@ -281,18 +306,26 @@ QMQ.prototype.joinGame = function(contestant,sid) {
 
 // Contestant submits an answer to a question.
 // Need to register it so points can be calculated later
-QMQ.prototype.registerAnswer = function(answer,sid) {
-  const gameid = Contestants[sid];    // get game id for this socket
+QMQ.prototype.registerAnswer = function(answer,token) {
+  let gameid = Contestants[token];    // get game id for this contestant
   if(gameid) {
     let game = ActiveGames[gameid];
-    if(game.cqno == -1) return;  // game has finished, so cant accept answer
+    if(game.cqno == -1) {  // game has finished, so cant accept answer
+      console.log("Game finished");
+      return null;
+    }
+
     let points = checkAnswer(game,answer);
-    if(points == -1) return;   // answer received too late
-    game.contestants[sid].answers[game.cqno] = answer;
-    game.contestants[sid].points[game.cqno] = points;
-    game.contestants[sid].totals += points; // increment total points
+    if(points == -1) {  
+      console.log("answer received too late");
+      return null;
+    }
+    console.log("Points: "+points);
+    game.contestants[token].answers[game.cqno] = answer;
+    game.contestants[token].points[game.cqno] = points;
+    game.contestants[token].totals += points; // increment total points
     game.answers++;
-      return game;
+    return game;
   }
   else
     console.log("Invalid User");
@@ -328,21 +361,28 @@ QMQ.prototype.getContestantScores = function(gameid) {
 }
 
 // check if answer received is correct if so calc points based on time
+// If answer is a number or string of 3 or less chars then it must be exact match
+// If longer string then dl distance must be less than half the number of chars in correct answers
+// e.g. if answer is cat then there must be an exact match
+// if answer is mangosteen then up to 4 spelling errors are allowed
 function checkAnswer(game,ans) {
   console.log("Ans is: "+ans);
   let q = game.questions[game.cqno];
   let dlmax = q.answer.length;
-  let dldist = dlevenshtein(q.answer,ans);
-  console.log("dl distance: "+dldist);
-  if(dldist < dlmax/2) {      // the answer can only have a few spelling mistakes
-    let response = new Date() - game.qstarttime;  // in milliseconds
-    console.log("response time is: "+response);
-    let maxt = game.timelimit * 1000;   // convert to milliseconds
-    if(response > maxt)   // shouldnt happen
-      return -1;
-    let points = ((maxt - response) * 100)/maxt; // max points is 100
-    return(Math.floor(points));
-  }
+  let dldist = dlevenshtein(q.answer.toLowerCase(),ans.toLowerCase());
+//  console.log("dl distance: "+dldist);
+  if((q.type='number' && q.answer == ans) ||
+    (dlmax <= 3 && q.answer.toLowerCase() == ans.toLowerCase()) ||
+    (q.type!='number' && dlmax > 3 && dldist < dlmax/2))
+    {
+      let response = new Date() - game.qstarttime;  // in milliseconds
+      console.log("response time is: "+response);
+      let maxt = game.timelimit * 1000;   // convert to milliseconds
+      if(response > maxt)   // shouldnt happen
+        return -1;
+      let points = ((maxt - response) * 100)/maxt; // max points is 100
+      return(Math.floor(points));
+    }
   return(0);
 }
 
@@ -430,7 +470,6 @@ function dlevenshtein( a, b )
             d[i][j],
             d[i - 2][j - 2] + cost
           )
-
 			}
 		}
 	}

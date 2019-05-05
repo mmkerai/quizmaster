@@ -288,20 +288,14 @@ DB.prototype.getQMByName = function(qname,callback) {
   });
 }
 
-DB.prototype.getGames = function(qmid,socket) {
+DB.prototype.getGames = function(qmid,callback) {
   let checkqm = "SELECT * FROM "+DBNAME+"."+GameTable+" WHERE qmid='"+qmid+"'";
   pool.query(checkqm, function(err,results,fields) {
     if(err) {
       console.log("DB error: "+err.message);
     }
-    if(results.length > 0) {
-      console.log("Getting games for "+qmid);
-      socket.emit('getGamesResponse',results);
-    }
-    else {
-      console.log("No games for QM: "+qmid);
-      socket.emit('errorResponse',qmid);
-    }
+    else
+      callback(results);
   });
 }
 
