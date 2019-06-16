@@ -8,7 +8,7 @@ var Marray = [];
 
 $(document).ready(function() {
 	setDefaultValues();
-	checksignedin();
+//	checksignedin();
 	$('#joinform').submit(function(event) {
 		event.preventDefault();
 	});
@@ -37,7 +37,7 @@ function joinquiz() {
 
 socket.on('loginResponse',function(qm) {
 	QM = qm;
-	console.log("Login response: "+QM);
+	console.log("Login response: "+QM.qmname);
 	setPostLoginValues(QM);
 	socket.emit("getGamesRequest",QM.qmid);
 });
@@ -114,7 +114,6 @@ socket.on('submitAnswerResponse',function(msg) {
 });
 
 socket.on('scoresUpdate',function(score) {
-	$('#qaform').hide();
 	$('#scores').show();
 	var table = new Tabulator("#scores", {
 		layout:"fitColumns",

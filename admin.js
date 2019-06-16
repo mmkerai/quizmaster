@@ -1,5 +1,5 @@
 /*
-*	Quizmaster Home page
+*	Quizmaster admin page
 */
 
 var QM = new Object();
@@ -16,7 +16,7 @@ $(document).ready(function() {
 	$('select[name="qcat"]').change(function() {
 			let cat = $('select[name="qcat"] option:selected').val();
 			console.log("selected option: "+cat);
-			socket.emit("getSubcatsRequest",cat);
+			socket.emit("getSubcatsRequest",QM.qmid,cat);
 	});
 });
 
@@ -42,16 +42,17 @@ function chooseq() {
 
 function reviewq() {
 	console.log("Reviewing Questions");
-	socket.emit('getCatsRequest','test');
-//	socket.emit('getSubcatsRequest','test');
-//	socket.emit('getDiffsRequest','test');
+	socket.emit('getCatsRequest',QM.qmid);
+//	socket.emit('getSubcatsRequest',QM.qmid);
+//	socket.emit('getDiffsRequest',QM.qmid);
 }
 
 function newgame() {
 	$('#newgame').show();
-	socket.emit('getCatsRequest','test');
-	socket.emit('getDiffsRequest','test');
-	socket.emit('getGameTypesRequest','test');
+	$('#gamestable').hide();
+	socket.emit('getCatsRequest',QM.qmid);
+	socket.emit('getDiffsRequest',QM.qmid);
+	socket.emit('getGameTypesRequest',QM.qmid);
 }
 
 function addgame() {
@@ -65,7 +66,7 @@ function addgame() {
 	newg.timelimit = $('#qmgtime').val();
 //	newg.gametype = $('#qmgtype').val();
 	newg.gametype = "FUNQUIZ";
-	newg.accesscode = $('#acode').val();
+	newg.accesscode = $('#qmgacode').val();
 /*	if(newg.gamename.length < 8)
 		return(alert("Please use a name at least 8 chars long"));
 	if(newg.timelimit < 5)
@@ -73,12 +74,12 @@ function addgame() {
 	if(Questions.length < 2)
 		return(alert("Please select at least 2 questions"));
 */
-	socket.emit('newGameRequest',newg);
+	socket.emit('newGameRequest',QM.qmid,newg);
 }
 
 socket.on('loginResponse',function(qm) {
 	QM = qm;
-//	console.log("Login response: "+QM);
+	console.log("Login response: "+QM.qmid);
 	setPostLoginValues(QM);
 	socket.emit("getGamesRequest",QM.qmid);
 	$('#error').text("");
@@ -123,7 +124,7 @@ socket.on('getQuestionsResponse',function(qlist) {
 				rowDblClick:function(e,row) {
 					console.log(row._row.data.qid);
 					Questions.push(row._row.data.qid);
-					$('#questions').val(Questions);
+					$('#qmgquestions').val(Questions);
 	  		},
 		});
 });

@@ -331,6 +331,30 @@ DB.prototype.getQuestionByID = function(qid,callback) {
   });
 }
 
+// This function gets the list of questions from the question table in an array all in one query
+// unlike above function which only returns one question at a time
+DB.prototype.getQuestionsByID = function(qlist,callback) {
+  let array = JSON.parse("[" + qlist + "]");
+  let qstr = " WHERE qid="+array[0];
+  for(var i=1;i < array.length;i++) {
+    qstr = qstr + " OR qid="+array[i];
+  }
+//  console.log("Q query = "+qstr);
+  let query = "SELECT * FROM "+DBNAME+"."+QTable+qstr;
+    pool.query(query,function(err,results,fields) {
+    if(err) {
+      console.log("DB error: "+err.message);
+      return;
+    }
+    if(results.length > 0) {
+      callback(results);   // list of questions
+    }
+    else {
+      console.log("No question ID: "+qlist);
+    }
+  });
+}
+
 DB.prototype.getQuestionsByCatandSubcat = function(cat,subcat,socket) {
   console.log("Getting question for "+cat+":"+subcat);
   let query = "SELECT * FROM "+DBNAME+"."+QTable+" WHERE category='"+cat+"' AND subcategory='"+subcat+"'";

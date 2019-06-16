@@ -2,11 +2,13 @@
 <html>
 <head>
 	<title>Quizmaster Games</title>
-	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+<!--	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/> -->
 <!--	<script src="https://apis.google.com/js/client:platform.js?onload=initGSignin" async defer></script> -->
-	<script type="text/javascript" src="tabulator.min.js"></script>
+<script type="text/javascript" src="jquery-2.1.3.min.js"></script>
+<link rel="stylesheet" href="bootstrap.min.css"/>
+<script type="text/javascript" src="tabulator.min.js"></script>
 	<link rel="stylesheet" href="tabulator.min.css"/>
 	<script src="socket.io/socket.io.js"></script>
 	<script src="qmutils.js"></script>
@@ -31,11 +33,15 @@
 	</div>
 	<p>&nbsp;</p>
 	<div id="gameplay">
-		<button class="btn btn-info" id="startgame" onclick="startGame()">Start Game Play</button>
+		<div id="prestart">
+			<span class="messages">Gamers joined: <button type="button" class="btn btn-warning" id="users" data-toggle="modal" data-target="#mymodal"></button></span>
+			<p>&nbsp;</p>
+			<button class="btn btn-info" id="startgame" onclick="startGame()">Start Game Play</button>
+		</div>
 		<button class="btn btn-info" id="nextq" onclick="nextQuestion()">Next Question</button>
-		Users ready to play: <button type="button" class="btn btn-warning" id="users" data-toggle="modal" data-target="#mymodal"></button>
-		Answers submitted: <button type="button" class="btn btn-warning" id="answers"></button>
-		<button type="button" class="btn btn-warning" onclick="showScores()">Show Scores</button>
+		<p>&nbsp;</p>
+		<span id="answait" class="messages">Answers received: <button type="button" class="btn btn-warning" id="answers"></button></span><br/>
+		<button type="button" class="btn btn-warning" id="shscores" onclick="showScores()">Show Scores</button>
 		<div id="mymodal" class="modal fade" role="dialog">
 			<div class="modal-dialog modal-sm">
 				<div class="modal-content">
@@ -55,12 +61,12 @@
 		<p><strong id='gameheader'></strong></p>
 		<p><strong id="qheader"></strong></p>
 		<p><img id='qimage'></p>
-		<div id='scores'></div>
+		<p class="message" id="error"></p>
+		<p class="message" id="message1"></p>
+	<div id='scores'></div>
 		<p>&nbsp;</p>
 		<div id="qlist"></div>
 		<p>&nbsp;</p>
-		<p class="message" id="error"></p>
-		<p class="message" id="message1"></p>
 		<p class="message" id="message2"></p>
 		<button class="btn btn-info" id="nextq" onclick="location.href = 'admin.html';">Back to Admin</button>
 	</div>

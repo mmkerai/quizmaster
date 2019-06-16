@@ -2,11 +2,14 @@
 <html>
 <head>
 	<title>Quizmaster Admin</title>
-	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+<!--	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"/>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"/> -->
 <!--		<script src="https://apis.google.com/js/client:platform.js?onload=initGSignin" async defer></script>-->
-	<script type="text/javascript" src="tabulator.min.js"></script>
+<script type="text/javascript" src="jquery-2.1.3.min.js"></script>
+<link rel="stylesheet" href="bootstrap.min.css"/>
+
+<script type="text/javascript" src="tabulator.min.js"></script>
 	<link rel="stylesheet" href="tabulator.min.css"/>
 	<script src="socket.io/socket.io.js"></script>
 	<script src="qmutils.js"></script>
@@ -63,25 +66,58 @@
 		<p>Sign in to view and start gaming or register with your gmail<p>
 	</div>
 	<div id="newgame">
-	<form id="gameform">
-		<table id="newgametable">
-		<tr><td>Game/event Name</td><td><input type="text" id="qmgname"/></td></tr>
-<!--		<tr><td>Game Type</td><td><select name="qmgtype" id="qmgtype"></select></td></tr>-->
-		<tr><td>Time per Question (s)</td><td><input type="text" id="qmgtime" value="20"/></td></tr>
-		<tr><td>List of Questions</td><td><input type="text" id="questions"/></td></tr>
-		<tr><td>Access Code</td><td><input type="text" id="acode"/></td></tr>
-		<tr><td colspan="2"><a href="#" onClick="addgame()">Set up Game</a></td></tr>
-		<tr><td colspan="2"><a href="#" onClick="chooseq()">Choose Questions</a></td></tr>
-		</table>
-	</form>
+		<div class="form-horizontal col-xs-9 col-xs-offset-3">
+		<div class="form-group">
+			<label class="control-label col-xs-3">Game or event name</label>
+			<div class="col-xs-3">
+				<input class="form-control" type="text" id="qmgname"/>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="control-label col-xs-3">Game type</label>
+			<div class="col-xs-3">
+				<select class="form-control" id="qmgtype"/>
+				<option value="FUNQUIZ">Funquiz</option>
+				<option value="PUBQUIZ">Pubquiz</option>
+				<option value="ONEQUIZ">Onequiz</option>
+			  </select>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="control-label col-xs-3">Access code to join (6 to 10 digits)</label>
+			<div class="col-xs-3">
+				<input class="form-control" type="text" id="qmgacode" value="12345678"/>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="control-label col-xs-3">Time per question (s)</label>
+			<div class="col-xs-3">
+				<input class="form-control" type="text" id="qmgtime" value="20"/>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="control-label col-xs-3">List of question ids</label>
+			<div class="col-xs-3">
+				<input class="form-control" type="text" id="qmgquestions"/>
+			</div>
+			<div class="col-xs-2">
+				<button class="btn btn-warning" onClick="chooseq()">Choose Questions</button>
+			</div>
+		</div>	
+		<div class="form-group">
+			<div class="col-xs-3 col-xs-offset-3">
+				<button class="btn btn-success" onClick="addgame()">Setup Game</button>
+			</div>
+		</div>
+		<div id="qchoose">
+			<form id="qchooseform">
+				Category<select name="qcat"></select>
+				SubCategory<select name="qsubcat"></select>
+			<button class="btn btn-warning" onClick='getquestions()'>Get Questions</button>
+			<p>&nbsp;</p>
+			</form>
+		</div>
 	</div>
-	<div id="qchoose">
-	<form id="qchooseform">
-		Category<select name="qcat"></select>
-		SubCategory<select name="qsubcat"></select>
-	<button class="btn btn-warning" onClick='getquestions()'>Get Questions</button>
-	<p>&nbsp;</p>
-	</form>
 </div>
 	<div id="setqtable"></div>
 	<p>&nbsp;</p>

@@ -135,7 +135,7 @@ io.on('connection',function(socket) {
   socket.on('logoutRequest',function(token) {
     AUTHUSERS[socket.id] = false;
     console.log("Logged out: "+socket.id)
-    autherror(socket);
+    autherror(socket,"Logged out");
   });
 
 	socket.on('loadQuestionsRequest',function(filename) {
@@ -171,41 +171,41 @@ io.on('connection',function(socket) {
     dbt.createTestApp(socket);
   });
 
-  socket.on('getCatsRequest',function(filename){
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
+  socket.on('getCatsRequest',function(qmid){
+    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
 //    console.log("Getting categories");
     let qcat = qmt.getCategories();
 //    console.log("Categories are: "+qcat);
 		socket.emit('getCatsResponse',qcat);
   });
 
-  socket.on('getSubcatsRequest',function(cat){
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
+  socket.on('getSubcatsRequest',function(qmid,cat){
+    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
 //    console.log("Get subcats for "+cat);
     let qsubcat = qmt.getSubCategories(cat);
 		socket.emit('getSubcatsResponse',qsubcat);
   });
 
-  socket.on('getDiffsRequest',function(filename){
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
+  socket.on('getDiffsRequest',function(qmid){
+    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     let qdiff = qmt.getDifficulties();
 		socket.emit('getDiffsResponse',qdiff);
   });
 
-  socket.on('getGameTypesRequest',function(filename) {
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
+  socket.on('getGameTypesRequest',function(qmid) {
+    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     let qtype = qmt.getGameTypes();
 		socket.emit('getGameTypesResponse',qtype);
   });
 
-  socket.on('getQuestionsByCatandSubcat',function(cat,subcat) {
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
+  socket.on('getQuestionsByCatandSubcat',function(qmid,cat,subcat) {
+    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     console.log("Getting questions for category: "+cat+":"+subcat);
     let qlist = dbt.getQuestionsByCatandSubcat(cat,subcat,socket);
   });
 
   socket.on('getQuestionByIdRequest',function(qid) {
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
+    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     console.log("Getting question with ID: "+qid);
     let qm = qmt.getQuestionById(qid);
 //    console.log(qm);
@@ -246,12 +246,12 @@ io.on('connection',function(socket) {
         if (error) throw error;
         socketIds.forEach(socketId => io.sockets.sockets[socketId].leave(gameid));
       });
-      setTimeout(function(){socket.emit('preGameStartResponse',newg)},2000);
+      setTimeout(function(){socket.emit('preGameStartResponse',newg)},1000);
     });
   });
 
-  socket.on('newGameRequest',function(game) {
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
+  socket.on('newGameRequest',function(qmid,game) {
+    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     if(!qmt.checkGameTypes(game.gametype))
       return(socket.emit("errorResponse","Invalid Game Type"));
     if(game.gamename.length < 6)
@@ -262,7 +262,6 @@ io.on('connection',function(socket) {
         return(socket.emit("errorResponse","Access code should be no more than 8 chars long"));
     if(game.questions.length < 2)
       return(socket.emit("errorResponse","Please select at least 2 questions"));
-//    game['questions'] = dbt.getQuestionsByCatandSubcat(game.cat,game.subcat);
     console.log("Creating new game");
     dbt.createNewGame(game,socket);
   });
@@ -389,8 +388,10 @@ function loadquestions(file,socket) {
   });
 }
 
-function autherror(socket) {
-  socket.emit("errorResponse","Please login as admin");
+function autherror(socket,msg) {
+  if(!msg)
+    msg = "Please login as admin";
+  socket.emit("errorResponse",msg);
 }
 
 function setAuthUsers() {
@@ -492,7 +493,6 @@ function qcountdown(game,time) {
 
 // question has finished, clear question and prepare for the next one
 function endQuestion(game) {
-  io.in(game.gameid).emit('timeUpdate','');
   io.in(game.gameid).emit('currentQuestionUpdate','');
   io.in(game.gameid).emit('correctAnswer',game.questions[game.cqno].answer);
   let points = qmt.getContestantPoints(game);

@@ -39,25 +39,28 @@ socket.on('preGameStartResponse',function(game) {
 	updateContestants(game.contestants);
 	$('#users').show();
 	$('#answers').text(0);
-//	setTimeout(socket.emit("getQuestionsRequest",game),1000);
 	socket.emit("getQuestionsRequest",game);
 	clearMessages();
 });
 
 socket.on('startGameResponse',function(game) {
 	$('#gameplay').show();
-	$('#startgame').hide();
+	$('#prestart').hide();
+	$('#answait').hide();
 });
 
 socket.on('currentQuestionUpdate',function(qobject) {
 	if(qobject == "") {
-		$('#nextq').show();
 		$('#message1').text("");
+		$('#shscores').show();
+//		$('#nextq').show();
 	}
 	else {
-		$('#nextq').hide();
+		$('#answait').hide();
+		$('#nextq').show();
 	}
 	$('#question').text(qobject);
+	$('#answait').show();
 });
 
 socket.on('announcement',function(message) {
@@ -94,12 +97,17 @@ socket.on('contestantUpdate',function(con) {
 // This is called when a contestant submits an answer
 socket.on('answersUpdate',function(ans) {
 	$('#answers').text(ans);
+	$('#scores').hide();
 });
 
 function updateContestants(con) {
 //	console.log("Contestants:"+con);
 	$('#users').text(Object.keys(con).length);
-	$('#userlist').text(JSON.stringify(con));
+	let ulist = "";
+	for(var i in con) {
+		ulist = ulist + con[i].cname +"<br/>";
+	}
+	$('#userlist').html(ulist);
 }
 
 socket.on('image',function(im) {

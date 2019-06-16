@@ -64,6 +64,9 @@ function setDefaultValues() {
 	$('#joingamex').hide();
 	$('#qaform').hide();
 	$('#nextq').hide();
+	$('#answait').hide();
+	$('#shscores').hide();
+	$('#prestart').show();
 	$('#qanswer').val('');
 	$('#mchoice').hide();
 	$('#sbutton').attr('disabled','disabled');
@@ -76,6 +79,7 @@ function setPostLoginValues(qm) {
 	$('#registerbutton').hide();
 	$('#signinbutton').hide();
 	$('#gameplay').show();
+	$('#prestart').show();
 	$('#signoutbutton').show();
 	$('#signinbutton').hide();
 	$('#userbutton').show();
@@ -202,7 +206,7 @@ function getquestions() {
 	const cat = $('select[name="qcat"] option:selected').val();
 	const subcat = $('select[name="qsubcat"] option:selected').val();
 	console.log("Getting Questions with Category: "+cat+":"+subcat);
-	socket.emit('getQuestionsByCatandSubcat',cat,subcat);
+	socket.emit('getQuestionsByCatandSubcat',QM.qmid,cat,subcat);
 }
 
 function readCookie(name)

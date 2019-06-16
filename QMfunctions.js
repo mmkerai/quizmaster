@@ -127,15 +127,21 @@ QMQ.prototype.testAns = function() {
 QMQ.prototype.gameReady = function(game) {
   let newg = new QMGame(game);
   ActiveGames[game.gameid] = newg;    // add game to the list
-  var array = JSON.parse("[" + game.questions + "]");
+/*  var array = JSON.parse("[" + game.questions + "]");
   let qarray = [];
+  // array contains a list of question IDs. Now convert from ID to the question object
+  // only valid while game is active
   for(var i in array) {
     let q = Dbt.getQuestionByID(array[i],function(q) {
 //      console.log("Push q");
       qarray.push(q);
       ActiveGames[game.gameid].questions = qarray;
     });
-  }
+  } */
+  Dbt.getQuestionsByID(game.questions,function(qs) {
+    ActiveGames[game.gameid].questions = qs;
+  });
+  
   AccessCodes[game.accesscode] = game.gameid;   // build list of accesscodes so its quicker to join later
   return(newg);
 }
@@ -415,7 +421,7 @@ function mysql_real_escape_string(str) {
 }
 
 //This is the damaerau levenshtein algo copied from dzone.com
-function dlevenshtein( a, b )
+function dlevenshtein(a, b)
 {
 	var i;
 	var j;
