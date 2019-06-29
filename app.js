@@ -14,6 +14,7 @@ const rln = require('readline');
 const db = require('./DBfunctions.js');
 const qm = require('./QMfunctions.js');
 const {OAuth2Client} = require('google-auth-library');
+//require('@google-cloud/debug-agent').start();
 var dbt = new db();
 var qmt = new qm();
 
@@ -31,8 +32,8 @@ const GOOGLE_CLIENT_ID = "132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.goo
 const SUPERADMIN = "thecodecentre@gmail.com";
 var AUTHUSERS = new Object(); // keep list of authenticated users by their socket ids
 var QMSockets = new Object(); // keep list of socket ids for each quizmaster
-const QFile = "test.json";
-//const QFile = "QMQuestions.json";
+//const QFile = "test.json";
+const QFile = "QMQuestions.json";
 const STARTQID = 1971;
 const GCOUNTDOWNTIME = 5;   // countdown in seconds before each question
 var NewCats = new Object();
@@ -114,10 +115,10 @@ io.on('connection',function(socket) {
   socket.on('TestLoginRequest',function(qmname) {
     dbt.getQMByName(qmname,function(qm) {
       if(qm) {
-        socket.emit('loginResponse',qm);
         AUTHUSERS[socket.id] = qm.qmid;
-        console.log("Test Logged in: "+socket.id)
+        console.log("Test Logged in: "+socket.id);
         QMSockets[qm.qmid] = socket.id;
+        socket.emit('loginResponse',qm);
       }
       else {
         socket.emit('errorResponse',"Login failed: "+qmname);
@@ -213,7 +214,7 @@ io.on('connection',function(socket) {
   });
 
   socket.on('updateQuestionRequest',function(qobj) {
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
+    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     console.log("Updating question with ID: "+qobj.qid);
     let qm = qmt.updateQuestion(qobj);
 //    console.log(qobj);
@@ -253,15 +254,15 @@ io.on('connection',function(socket) {
   socket.on('newGameRequest',function(qmid,game) {
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     if(!qmt.checkGameTypes(game.gametype))
-      return(socket.emit("errorResponse","Invalid Game Type"));
+      return(socket.emit("gameSetupErrorResponse","Invalid Game Type"));
     if(game.gamename.length < 6)
-      return(socket.emit("errorResponse","Please use a name at least 6 chars long"));
+      return(socket.emit("gameSetupErrorResponse","Please use a name at least 6 chars long"));
     if(game.timelimit < 5)
-      return(socket.emit("errorResponse","Time for each question should be at least 5 seconds"));
-    if(game.accesscode.length > 8)
-        return(socket.emit("errorResponse","Access code should be no more than 8 chars long"));
+      return(socket.emit("gameSetupErrorResponse","Time for each question should be at least 5 seconds"));
+//    if(game.accesscode.length > 8)
+//        return(socket.emit("gameSetupErrorResponse","Access code should be no more than 8 chars long"));
     if(game.questions.length < 2)
-      return(socket.emit("errorResponse","Please select at least 2 questions"));
+      return(socket.emit("gameSetupErrorResponse","Please select at least 2 questions"));
     console.log("Creating new game");
     dbt.createNewGame(game,socket);
   });
@@ -499,8 +500,8 @@ function endQuestion(game) {
 //  Show all scores for this question
 //  io.in(game.gameid).emit('scoresUpdate',points);
   if((game.cqno+1) >= game.numquestions) {    // been through all questions
-    io.in(game.gameid).emit('announcement','End of Game');
-    game.cqno = -1;   // game has ended setting
+    io.in(game.gameid).emit('endOfGame','');
+    qmt.endOfGame(game.gameid); //housekeeping
   }
   else {
     io.in(game.gameid).emit('announcement','Please wait for the next question');

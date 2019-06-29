@@ -48,11 +48,7 @@ socket.on('joinGameResponse',function(contestant) {
 //	$('#gameheader').text(message);
 	$('#userbutton').text(contestant.userid);
 	$('#userbutton').show();
-	saveCookie("quizmaster",contestant.token,3600);
-});
-
-socket.on('announcement',function(message) {
-	$('#qheader').text(message);
+	saveCookie("quizmaster",contestant.token,1800);	// save credentials for 30 mins
 });
 
 socket.on('timeUpdate',function(message) {

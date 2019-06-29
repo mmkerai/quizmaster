@@ -250,7 +250,7 @@ QMQ.prototype.validatequestion = function(jstr) {
   newq["Subcategory"] = qobj.Subcategory.toUpperCase();
   newq["Question"] = mysql_real_escape_string(qobj.Question);
   newq["Image"] = qobj.Image;
-  newq["Answer"] = qobj.Answer;
+  newq["Answer"] = mysql_real_escape_string(qobj.Answer);
 
     if(QDIFF[newq.Difficulty] == null) {
       console.log("Difficulty invalid: "+jstr);
@@ -364,6 +364,11 @@ QMQ.prototype.getContestantScores = function(gameid) {
     }
     return(result);
   }
+}
+
+// Games finished - housekeeping 
+QMQ.prototype.endOfGame = function(gameid) {
+  delete ActiveGames[gameid];
 }
 
 // check if answer received is correct if so calc points based on time

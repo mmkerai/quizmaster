@@ -63,10 +63,6 @@ socket.on('currentQuestionUpdate',function(qobject) {
 	$('#answait').show();
 });
 
-socket.on('announcement',function(message) {
-	$('#qheader').text(message);
-});
-
 socket.on('timeUpdate',function(message) {
 	$('#tremain').text(message);
 });

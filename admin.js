@@ -36,11 +36,17 @@ function regNewQM() {
 }
 
 function chooseq() {
+	if(!QM)
+		return($('#error').text("You need to login first"));
+
 	$('#qchoose').show();
-	socket.emit('getCatsRequest','test');
+	socket.emit('getCatsRequest',QM.qmid);
 }
 
 function reviewq() {
+	if(!QM)
+		return($('#error').text("You need to login first"));
+
 	console.log("Reviewing Questions");
 	socket.emit('getCatsRequest',QM.qmid);
 //	socket.emit('getSubcatsRequest',QM.qmid);
@@ -48,6 +54,9 @@ function reviewq() {
 }
 
 function newgame() {
+	if(!QM)
+		return($('#error').text("You need to login first"));
+
 	$('#newgame').show();
 	$('#gamestable').hide();
 	socket.emit('getCatsRequest',QM.qmid);
@@ -64,16 +73,8 @@ function addgame() {
 	newg.numquestions = Questions.length;
 	newg.questions = Questions;
 	newg.timelimit = $('#qmgtime').val();
-//	newg.gametype = $('#qmgtype').val();
-	newg.gametype = "FUNQUIZ";
-	newg.accesscode = $('#qmgacode').val();
-/*	if(newg.gamename.length < 8)
-		return(alert("Please use a name at least 8 chars long"));
-	if(newg.timelimit < 5)
-		return(alert("Time for each question should be at least 5 seconds"));
-	if(Questions.length < 2)
-		return(alert("Please select at least 2 questions"));
-*/
+	newg.gametype = $('#qmgtype').val();
+//	newg.accesscode = $('#qmgacode').val();
 	socket.emit('newGameRequest',QM.qmid,newg);
 }
 
@@ -131,7 +132,7 @@ socket.on('getQuestionsResponse',function(qlist) {
 
 socket.on('newGameResponse',function(data) {
 	$('#message1').text("Game created");
+	$('#error').text("");
 	setPostLoginValues(QM);
 	socket.emit("getGamesRequest",QM.qmid);
-	$('#error').text("");
 });

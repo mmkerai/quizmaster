@@ -252,13 +252,14 @@ DB.prototype.createNewQM = function(obj,socket) {
 }
 
 DB.prototype.createNewGame = function(obj,socket) {
+  let acode = generateAccesscode();
   let query = "INSERT INTO "+DBNAME+"."+GameTable+" VALUES (0,'"+
                   obj.qmid+"','"+
                   obj.numquestions+"','"+
                   obj.timelimit+"','"+
                   obj.gamename+"','"+
                   obj.gametype+"','"+
-                  obj.accesscode+"','"+
+                  acode+"','"+
                   obj.questions+"');";
   pool.query(query, function(err, results, fields) {
     if(err) {
@@ -276,6 +277,7 @@ DB.prototype.getQMByName = function(qname,callback) {
   pool.query(checkqm, function(err,results,fields) {
     if(err) {
       console.log("DB error: "+err.message);
+      return;
     }
     if(results.length > 0) {
       console.log("Quizmaster Exists OK "+results[0].qmname);
@@ -370,6 +372,16 @@ DB.prototype.getQuestionsByCatandSubcat = function(cat,subcat,socket) {
       socket.emit('errorResponse',"No questions");
     }
   });
+}
+
+function generateAccesscode() {
+  var length = 8,
+  charset = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ23456789",
+  retVal = "";
+  for(var i = 0, n = charset.length; i < length; ++i) {
+      retVal += charset.charAt(Math.random() * n);
+  }
+  return retVal;
 }
 
 module.exports = DB;

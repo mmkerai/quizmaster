@@ -5,7 +5,7 @@ var socket = io('', {
     'reconnectionAttempts': 5
 });
 
-const version = "QM v0.2";
+const version = "QM v0.3";
 const GOOGLE_CLIENT_ID="132511972968-co6rs3qsngvmc592v9qgreinp1q7cicf.apps.googleusercontent.com";
 //const GOOGLE_CLIENT_ID="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com";
 var googleUser;
@@ -36,7 +36,6 @@ function checksignedin() {
 	QM = JSON.parse(localStorage.getItem("QM"));
 	if(QM)
 		socket.emit('TestLoginRequest',QM.qmname);
-
 	clearMessages();
 }
 
@@ -57,6 +56,7 @@ function setDefaultValues() {
 	$('#signoutbutton').hide();
 	$('#gameplay').hide();
 	$('#regqm').hide();
+	$('#yourgames').hide();
 	$('#signinbutton').show();
 	$("#error").text("");
 	$("#message1").text("");
@@ -84,7 +84,9 @@ function setPostLoginValues(qm) {
 	$('#signinbutton').hide();
 	$('#userbutton').show();
 	$('#regqm').hide();
+	$('#yourgames').show();
 	$('#gamestable').hide();
+	$('#newgame').hide();
 	console.log("User successfully signed in:"+qm.qmname);
 }
 
@@ -151,6 +153,10 @@ socket.on('errorResponse',function(data) {
 	$('#error').text(data);
 });
 
+socket.on('gameSetupErrorResponse',function(data) {
+	$('#setupgameerror').text(data);
+});
+
 socket.on('getCatsResponse',function(cats) {
 	let items = Object.getOwnPropertyNames(cats);
 	console.log(items);
@@ -200,6 +206,15 @@ socket.on('getTypesResponse', function(types) {
         text : item
     }));
 	});
+});
+
+socket.on('announcement',function(message) {
+	$('#qheader').text(message);
+});
+
+socket.on('endOfGame', function() {
+	$('#qheader').text("End of Game");
+	delCookie("quizmaster");
 });
 
 function getquestions() {
