@@ -27,6 +27,11 @@ function showScores() {
 	clearMessages();
 }
 
+function endGame() {
+	socket.emit("endGameRequest",QM.qmid,gid);
+	clearMessages();
+}
+
 socket.on('loginResponse',function(qm) {
 	$('#error').text("");
 	QM = qm;
@@ -80,7 +85,7 @@ socket.on('getQuestionsResponse',function(qlist) {
 		    {title:"Type", field:"type", align:"center"},
 		    {title:"Question", field:"question",width:320},
 		    {title:"Answer", field:"answer"},
-		 		{title:"Image", field:"imageurl"}],
+		 	{title:"Image", field:"imageurl"}],
 		});
 });
 
@@ -121,3 +126,8 @@ socket.on('scoresUpdate',function(scores) {
 		{title:"Points", field:"points",formatter:"progress",formatterParams:{color:["#00dd00", "orange", "rgb(255,0,0)"]},width:500}]
 	});
 });
+
+socket.on('endGameResponse',function() {
+	window.close();
+});
+

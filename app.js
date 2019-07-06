@@ -281,7 +281,7 @@ io.on('connection',function(socket) {
     }
   });
 
-// called by quizmaster to start a game
+// called by quizmaster to show next question
   socket.on('nextQuestionRequest',function(qmid,gameid) {
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     let game = qmt.getActiveGame(gameid);
@@ -304,6 +304,12 @@ io.on('connection',function(socket) {
     else {
       socket.emit("errorResponse","Game not active");
     }
+  });
+
+  // called by quizmaster to end the game
+  socket.on('endGameRequest',function(qmid,gameid) {
+    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    qmt.endOfGame(gameid); //housekeeping
   });
 
 // used by contestant to join game so no login/auth required
@@ -501,7 +507,6 @@ function endQuestion(game) {
 //  io.in(game.gameid).emit('scoresUpdate',points);
   if((game.cqno+1) >= game.numquestions) {    // been through all questions
     io.in(game.gameid).emit('endOfGame','');
-    qmt.endOfGame(game.gameid); //housekeeping
   }
   else {
     io.in(game.gameid).emit('announcement','Please wait for the next question');
